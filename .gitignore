@@ -6,3 +6,5 @@ explorer-data/
 *.tar
 *.part
 .env*
+
+public/

@@ -18,11 +18,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Prepare interface only
-        run: |
-          mkdir public
-          cp index.html style.css app.js public/
-          cp -r data public/
+      - name: Prepare approved public assets
+        run: python3 scripts/build_static.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

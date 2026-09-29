@@ -21,7 +21,8 @@ jobs:
       - name: Prepare interface only
         run: |
           mkdir public
-          cp index.html style.css app.js worker.js public/
+          cp index.html style.css app.js public/
+          cp -r data public/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

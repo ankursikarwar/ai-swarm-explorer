@@ -16,6 +16,7 @@ The dataset requires approved Hugging Face access. The standard-library helper r
 python3 ~/Work/AI_Swarm/scripts/dataset.py login
 python3 ~/Work/AI_Swarm/scripts/dataset.py download
 python3 ~/Work/AI_Swarm/scripts/dataset.py prepare
+python3 ~/Work/AI_Swarm/scripts/dataset.py index
 ```
 
 The login prompt hides the token and verifies access before saving it to Hugging Face's conventional token path with owner-only permissions. Never put a token in Git, chat, or a command argument.
@@ -54,7 +55,7 @@ Alternatively, open the GitHub Pages site and choose **Open data folder**. Selec
 
 - Every source `.jsonl.gz` table is prepared with every original field intact.
 - Table-wide charts show daily record counts and agent counts (computer turns are joined through their session).
-- Search scans all chunks in the selected table, in a worker, with exact matching totals and 50 records per page. Filters combine text, agent, UTC date range, and action/role.
+- Cluster search uses a SQLite index and transfers only 50 matching records per page. Local-folder search scans candidate chunks in a worker, with exact matching totals. Filters combine text, agent, UTC date range, and action/role.
 - Search a session or agent ID across related tables to trace records. This is a raw-record explorer, not an inferred social-network or causal analysis.
 - Screenshot lookup uses the turn ID and the archive's PNG member. Redacted screenshots are labeled.
 - Timeline and agent charts describe the whole selected table; record filters apply to the result list. Records retain source file order.
@@ -63,7 +64,7 @@ Alternatively, open the GitHub Pages site and choose **Open data folder**. Selec
 
 Counts represent records, not unique actions across tables, success, or model quality. Tables overlap. Generated summaries and agent narratives are unverified claims. Read the source SCHEMA.md and CHANGELOG.md before interpreting behavior changes. The preparer follows the source schema, including event speakerId/agentId, chat agent_speaker_id, and computer-turn session-to-agent joins. Timeline charts use record creation dates, which can differ from dates described by a summary or goal.
 
-The transcript is a convenient duplicate presentation of events rather than a separate visualized table. Source documentation and screenshot archives remain in raw storage. Searching a large computer-use table can take time because all candidate chunks are scanned after date/agent/type pruning; prepared copies also use gzip compression but consume additional storage. Browser memory remains bounded to batches and the current page, except the compact manifest and file references.
+The transcript is a convenient duplicate presentation of events rather than a separate visualized table. Source documentation and screenshot archives remain in raw storage. Searching a large computer-use table can take time because all candidate chunks are scanned after date/agent/type pruning; prepared copies also use gzip compression but consume additional storage. Browser memory remains bounded to batches and the current page, except the compact manifest and file references. The cluster SQLite index is an additional uncompressed copy in scratch; full-text substring searches can take longer than indexed agent/date filters.
 
 The public source repo must never contain restricted records. GitHub Pages deploys only four interface files. Research terms remain those of the source dataset; cite AI Digest / AI Village, 2026.
 

@@ -5,3 +5,5 @@
 .agentrow>div>span:first-child{min-width:0;overflow-wrap:anywhere;padding-right:12px}.agentrow>div>span:last-child{flex-shrink:0}
 
 .aggregateRow{grid-template-columns:110px 1.4fr 1.2fr 160px}.recordCount{white-space:normal}#related a{text-decoration:none}@media(max-width:700px){.aggregateRow{grid-template-columns:1fr 1fr}}
+
+.exploreStatus{padding:12px 16px;background:#e5f4f1;border-left:3px solid var(--teal);font-size:14px;color:#17645e;margin:0 0 20px}#filters{scroll-margin-top:20px}

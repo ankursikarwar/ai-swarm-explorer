@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Standard-library download and bounded-memory preparation of AI Village."""
-import argparse, collections, datetime, getpass, gzip, hashlib, json, os, pathlib, re, urllib.request, urllib.parse, concurrent.futures
+import argparse, collections, datetime, getpass, gzip, hashlib, json, os, pathlib, re, urllib.request, urllib.parse, concurrent.futures, time
 REPO='aidigestorg/ai-village'
 class SafeRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
@@ -14,7 +14,7 @@ def token_path():
 def token():
     p=token_path(); return os.environ.get('HF_TOKEN') or (p.read_text().strip() if p.exists() else '')
 def request(url, auth=True):
-    return OPENER.open(urllib.request.Request(url,headers={'Authorization':'Bearer '+token()} if auth and token() else {}),timeout=120)
+    return urllib.request.build_opener(SafeRedirect()).open(urllib.request.Request(url,headers={'Authorization':'Bearer '+token()} if auth and token() else {}),timeout=120)
 def dump(p,obj):
     p.parent.mkdir(parents=True,exist_ok=True); p.write_text(json.dumps(obj,ensure_ascii=False,separators=(',',':')))
 def login():
@@ -53,8 +53,16 @@ def download(root,images,workers=4):
                 f.write(data)
         if item.get('size') is not None and part.stat().st_size!=item['size']:raise ValueError('Incomplete download: '+name)
         part.replace(target);marker.write_text(sha)
+    def fetch_with_retry(item):
+        for attempt in range(6):
+            try:return fetch_file(item)
+            except (OSError,ValueError) as error:
+                if attempt==5:raise
+                delay=min(60,2**(attempt+1))
+                print('Retrying',item['path'],'in',delay,'seconds:',type(error).__name__,flush=True)
+                time.sleep(delay)
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
-        for _ in pool.map(fetch_file,files):pass
+        for _ in pool.map(fetch_with_retry,files):pass
     print('Download complete:',root)
 def normalized(row, sessions=None):
     d=row.get('data') or {}

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Standard-library download and bounded-memory preparation of AI Village."""
-import argparse, collections, datetime, getpass, gzip, hashlib, json, os, pathlib, re, urllib.request, urllib.parse
+import argparse, collections, datetime, getpass, gzip, hashlib, json, os, pathlib, re, urllib.request, urllib.parse, sqlite3
 REPO='aidigestorg/ai-village'
 class SafeRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
@@ -81,7 +81,7 @@ def prepare(root,out):
             if not batch:return
             rel=name+'/'+str(len(chunks)).zfill(6)+'.json.gz'
             target=out/rel;target.parent.mkdir(parents=True,exist_ok=True)
-            with gzip.open(target,'wt',compresslevel=1) as f:json.dump(batch,f,ensure_ascii=False,separators=(',',':'))
+            with gzip.open(target,'wt',compresslevel=1) as f:f.write(json.dumps(batch,ensure_ascii=False,separators=(',',':')))
             day_values=[r['date'][:10] for r in batch if r['date']]
             chunks.append({'path':rel,'count':len(batch),'from':min(day_values) if day_values else '', 'to':max(day_values) if day_values else '', 'agents':sorted(set(r['agent'] for r in batch)), 'kinds':sorted(set(r['kind'] for r in batch))});batch=[];batch_size=0
         with gzip.open(path,'rt') as f:
@@ -96,8 +96,25 @@ def prepare(root,out):
         flush();manifest['tables'][name]={'count':count,'chunks':chunks,'dates':dict(sorted(dates.items())),'agents':dict(agents),'kinds':dict(kinds),'fields':dict(fields)}
     if not manifest['tables']:raise SystemExit('No .jsonl.gz tables found; download the dataset first.')
     dump(out/'manifest.json',manifest);print('Prepared',sum(t['count'] for t in manifest['tables'].values()),'records in',out)
+def index_data(out):
+    manifest=json.loads((out/'manifest.json').read_text())
+    db=out.parent/'explorer.sqlite';pending=out.parent/'explorer.sqlite.partial'
+    if pending.exists():raise SystemExit('An unfinished index exists. Inspect it before starting another index build.')
+    con=sqlite3.connect(pending)
+    con.execute('CREATE TABLE records (table_name TEXT, position INTEGER, day TEXT, agent TEXT, kind TEXT, record TEXT)')
+    for name,table in manifest['tables'].items():
+        print('Indexing',name,flush=True);position=0
+        for chunk in table['chunks']:
+            path=chunk['path'] if isinstance(chunk,dict) else chunk
+            with gzip.open(out/path,'rt') as f:rows=json.load(f)
+            con.executemany('INSERT INTO records VALUES (?,?,?,?,?,?)',[(name,position+i,r['date'][:10],r['agent'],r['kind'],json.dumps(r,ensure_ascii=False,separators=(',',':'))) for i,r in enumerate(rows)])
+            position+=len(rows);con.commit()
+    for columns in ['table_name, position','table_name, day','table_name, agent, day','table_name, kind, day']:
+        con.execute('CREATE INDEX idx_'+str(len(con.execute("SELECT name FROM sqlite_master WHERE type='index'").fetchall()))+' ON records ('+columns+')')
+    con.commit();con.close();pending.replace(db);print('Query index ready:',db,flush=True)
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['login','download','prepare']);p.add_argument('--raw',type=pathlib.Path,default=pathlib.Path.home()/'scratch/AI_Swarm/ai-village/raw');p.add_argument('--output',type=pathlib.Path,default=pathlib.Path.home()/'scratch/AI_Swarm/ai-village/explorer-data');p.add_argument('--with-images',action='store_true');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['login','download','prepare','index']);p.add_argument('--raw',type=pathlib.Path,default=pathlib.Path.home()/'scratch/AI_Swarm/ai-village/raw');p.add_argument('--output',type=pathlib.Path,default=pathlib.Path.home()/'scratch/AI_Swarm/ai-village/explorer-data');p.add_argument('--with-images',action='store_true');a=p.parse_args()
     if a.action=='login':login()
     elif a.action=='download':download(a.raw,a.with_images)
-    else:prepare(a.raw,a.output)
+    elif a.action=='prepare':prepare(a.raw,a.output)
+    else:index_data(a.output)

@@ -35,10 +35,10 @@ python3 ~/Work/AI_Swarm/scripts/serve.py
 On your computer, open an SSH tunnel and leave its terminal running:
 
 ```bash
-ssh -N -L 8866:127.0.0.1:8866 YOUR_CLUSTER_SSH_ALIAS
+ssh -N -L 8866:YOUR_ABSOLUTE_SOCKET_PATH YOUR_CLUSTER_SSH_ALIAS
 ```
 
-Open the GitHub Pages site and choose **Connect to cluster**. The server binds only to cluster loopback, not a public interface. Browser requests go to `http://localhost:8866` through your authenticated SSH tunnel. It serves only the prepared dataset and selected screenshots, never arbitrary home-directory files. Only the expected GitHub Pages origin and local development origin receive CORS permission. Your browser may require permission for local-network access; if the browser blocks this connection, use local-folder mode below. The tunnel and server must stay running while browsing.
+Open the GitHub Pages site and choose **Connect to cluster**. The server uses an owner-only Unix socket in `~/Work/AI_Swarm/.run/explorer.sock`; it does not listen on a cluster TCP port. Replace YOUR_ABSOLUTE_SOCKET_PATH with the absolute path printed by the server. Browser requests go to `http://localhost:8866` through your authenticated SSH tunnel. It serves only the prepared dataset and selected screenshots, never arbitrary home-directory files. Only the expected GitHub Pages origin and local development origin receive CORS permission. Your browser may require permission for local-network access; if the browser blocks this connection, use local-folder mode below. The tunnel and server must stay running while browsing.
 
 ## Optional: local-folder mode
 

@@ -6,4 +6,6 @@
 
 .aggregateRow{grid-template-columns:110px 1.4fr 1.2fr 160px}.recordCount{white-space:normal}#related a{text-decoration:none}@media(max-width:700px){.aggregateRow{grid-template-columns:1fr 1fr}}
 
+.samples{margin:0 0 24px}.samples h3{margin-bottom:4px}.samples .sectiontop p{margin:4px 0}.sampleRecord{background:#f7fafb;border-left:3px solid var(--teal)}.openRecordLabel{display:block;color:var(--teal);font-size:13px;font-weight:650;margin-top:10px}.sourceContent{font-family:inherit;font-size:16px;line-height:1.7;background:#f1f6f8;border-left:3px solid var(--teal)}
+
 .exploreStatus{padding:12px 16px;background:#e5f4f1;border-left:3px solid var(--teal);font-size:14px;color:#17645e;margin:0 0 20px}#filters{scroll-margin-top:20px}
